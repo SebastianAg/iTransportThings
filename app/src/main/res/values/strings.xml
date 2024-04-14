@@ -3,4 +3,6 @@
     <string name="title_home">Robot</string>
     <string name="title_dashboard">Map</string>
     <string name="title_notifications">Notifications</string>
+    <string name="hold_here_to_call_robot">Hold here to call Robot</string>
+    <string name="hold_5_sec">Hold 5 sec</string>
 </resources>
