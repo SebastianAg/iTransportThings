@@ -1,6 +1,8 @@
 package com.example.itransportthings.ui.home;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -21,7 +23,10 @@ public class HomeFragment extends Fragment {
 
 
     private TextView textView;
+    private TextView textView2;
+    private TextView textView3;
     private Handler handler;
+    private int clickCount = 0;
     private boolean longPress = false;
 
     @SuppressLint({"ClickableViewAccessibility", "SetTextI18n"})
@@ -29,11 +34,15 @@ public class HomeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        Button myButton = view.findViewById(R.id.button);
+        Button myCallButton = view.findViewById(R.id.button);
+        Button myShutdownButton = view.findViewById(R.id.button2);
+        Button mySendButton = view.findViewById(R.id.button3);
         textView = view.findViewById(R.id.textView2);
+        textView2 = view.findViewById(R.id.textView3);
+        textView3 = view.findViewById(R.id.textView4);
         handler = new Handler();
 
-        myButton.setOnTouchListener((v, event) -> {
+        myCallButton.setOnTouchListener((v, event) -> { //call button
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     handler.postDelayed(longPressRunnable, 5000); // 5 seconds
@@ -51,6 +60,41 @@ public class HomeFragment extends Fragment {
             return false;
         });
 
+        myShutdownButton.setOnClickListener(new View.OnClickListener() { //shutdown button
+            @Override
+            public void onClick(View v) {
+                clickCount++;
+                click(clickCount);
+                if(clickCount >= 5){
+                    //shutdown();
+                    clickCount = 0;
+                }
+            }
+        });
+
+        mySendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setMessage("Do you really want to send the robot?").setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        textView3.setVisibility(View.VISIBLE);
+                        textView3.setText("Robot has been sent away");
+                        textView3.postDelayed(() -> textView3.setVisibility(View.INVISIBLE), 3000);
+                        //sendRobot();
+                    }
+                }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //dont do anything here i guess
+                    }
+                });
+                AlertDialog mDialog = builder.create();
+                mDialog.show();
+            }
+        });
+
         return view;
     }
 
@@ -63,4 +107,24 @@ public class HomeFragment extends Fragment {
         });
         longPress = true;
     };
+
+    @SuppressLint("SetTextI18n")
+    private void click(int clicks){
+        if (clicks < 5) {
+            textView2.setVisibility(View.VISIBLE);
+            textView2.setText("Press this " + (5-clicks) + " more to shutdown");
+        }
+        if (clicks == 5){
+            textView2.setVisibility(View.VISIBLE);
+            textView2.setText("Robot has been shutdown");
+            textView2.postDelayed(() -> textView2.setVisibility(View.INVISIBLE), 3000);
+        }
+    }
+    private void shutdown(){
+        //shutdown the robot
+    }
+
+    private void sendRobot(){
+        //send robot
+    }
 }
