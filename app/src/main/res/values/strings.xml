@@ -7,4 +7,5 @@
     <string name="hold_5_sec">Hold 5 sec</string>
     <string name="shutdown">Emergency Shutdown</string>
     <string name="Send">Send robot</string>
+    <string name="Swap">Swap Ip</string>
 </resources>
