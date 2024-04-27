@@ -3,8 +3,10 @@ package com.example.itransportthings.ui.home;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -17,9 +19,15 @@ import androidx.fragment.app.Fragment;
 
 import com.example.itransportthings.R;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 
 public class HomeFragment extends Fragment {
+    String server_url = "http://130.229.154.164:8000";
 
 
     private TextView textView;
@@ -82,7 +90,8 @@ public class HomeFragment extends Fragment {
                         textView3.setVisibility(View.VISIBLE);
                         textView3.setText("Robot has been sent away");
                         textView3.postDelayed(() -> textView3.setVisibility(View.INVISIBLE), 3000);
-                        //sendRobot();
+                        sendRobot();
+
                     }
                 }).setNegativeButton("No", new DialogInterface.OnClickListener() {
                     @Override
@@ -101,6 +110,7 @@ public class HomeFragment extends Fragment {
     @SuppressLint("SetTextI18n")
     private final Runnable longPressRunnable = () -> {
         requireActivity().runOnUiThread(() -> {
+            callRobot();
             textView.setVisibility(View.VISIBLE);
             textView.setText("Long press detected, calling robot...");
             textView.postDelayed(() -> textView.setVisibility(View.INVISIBLE), 3000);
@@ -115,16 +125,60 @@ public class HomeFragment extends Fragment {
             textView2.setText("Press this " + (5-clicks) + " more to shutdown");
         }
         if (clicks == 5){
+            shutdown();
             textView2.setVisibility(View.VISIBLE);
             textView2.setText("Robot has been shutdown");
             textView2.postDelayed(() -> textView2.setVisibility(View.INVISIBLE), 3000);
         }
     }
+
+    private class ParseTask extends AsyncTask<String, Void, Void> {
+
+        HttpURLConnection urlConnection = null;
+        BufferedReader reader = null;
+        String resultJson = "";
+        String data;
+
+        @Override
+        protected Void doInBackground(String... params) {
+            try {
+                data = params[0];
+                Log.d("tag", "doInBackground: " + data);
+                String site_url_json = server_url + data;
+                Log.d("tag", "doInBackground: " + site_url_json);
+                URL url = new URL(site_url_json);
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.connect();
+
+                InputStream inputStream = urlConnection.getInputStream();
+                StringBuffer buffer = new StringBuffer();
+
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line);
+                }
+
+                resultJson = buffer.toString();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    private void callRobot(){
+        new ParseTask().execute("/run/?action=start");
+    }
     private void shutdown(){
-        //shutdown the robot
+        new ParseTask().execute("/run/?action=stop");
     }
 
     private void sendRobot(){
-        //send robot
+        new ParseTask().execute("/run/?action=send");
     }
 }
