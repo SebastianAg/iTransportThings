@@ -27,7 +27,7 @@ import java.net.URL;
 
 
 public class HomeFragment extends Fragment {
-    String server_url = "http://130.229.154.164:8000";
+    String server_url = "http://130.229.178.50:8000"; //webserver ip, have to manually swap or add a change button later.
 
 
     private TextView textView;
@@ -45,6 +45,7 @@ public class HomeFragment extends Fragment {
         Button myCallButton = view.findViewById(R.id.button);
         Button myShutdownButton = view.findViewById(R.id.button2);
         Button mySendButton = view.findViewById(R.id.button3);
+        Button myUploadButton = view.findViewById(R.id.button5);
         textView = view.findViewById(R.id.textView2);
         textView2 = view.findViewById(R.id.textView3);
         textView3 = view.findViewById(R.id.textView4);
@@ -91,6 +92,27 @@ public class HomeFragment extends Fragment {
                         textView3.setText("Robot has been sent away");
                         textView3.postDelayed(() -> textView3.setVisibility(View.INVISIBLE), 3000);
                         sendRobot();
+
+                    }
+                }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //dont do anything here i guess
+                    }
+                });
+                AlertDialog mDialog = builder.create();
+                mDialog.show();
+            }
+        });
+
+        myUploadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setMessage("Do you really want to send the robot?").setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        uploadRoute();
 
                     }
                 }).setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -181,4 +203,8 @@ public class HomeFragment extends Fragment {
     private void sendRobot(){
         new ParseTask().execute("/run/?action=send");
     }
+    private void uploadRoute(){
+        new ParseTask().execute("/upload/?upload=test");
+    }
+    //private void recordRoute(){new ParseTask().execute("/run/?action=send");    }
 }
