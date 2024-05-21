@@ -12,7 +12,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -27,7 +29,11 @@ import java.net.URL;
 
 
 public class HomeFragment extends Fragment {
-    String server_url = "http://130.229.178.50:8000"; //webserver ip, have to manually swap or add a change button later.
+    //130.229.190.235:8000
+    //130.229.178.50:8000
+    String ip = "130.229.190.235";
+    String server_url = "http://"+ ip +":8000"; //webserver ip, have to manually swap or add a change button later.
+    EditText ipAdd;
 
 
     private TextView textView;
@@ -45,7 +51,8 @@ public class HomeFragment extends Fragment {
         Button myCallButton = view.findViewById(R.id.button);
         Button myShutdownButton = view.findViewById(R.id.button2);
         Button mySendButton = view.findViewById(R.id.button3);
-        Button myUploadButton = view.findViewById(R.id.button5);
+        Button myIpButton = view.findViewById(R.id.button5);
+        Button myRecordButton = view.findViewById(R.id.button6);
         textView = view.findViewById(R.id.textView2);
         textView2 = view.findViewById(R.id.textView3);
         textView3 = view.findViewById(R.id.textView4);
@@ -105,7 +112,7 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        myUploadButton.setOnClickListener(new View.OnClickListener() {
+        /*myUploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -124,7 +131,60 @@ public class HomeFragment extends Fragment {
                 AlertDialog mDialog = builder.create();
                 mDialog.show();
             }
+        });*/
+
+        myIpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("New IP-address?");
+                ipAdd = new EditText(getActivity());
+                builder.setView(ipAdd);
+
+                builder.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ip = ipAdd.getText().toString();
+                        server_url = "http://"+ ip +":8000";
+                        Toast.makeText(getActivity().getApplicationContext(), server_url, Toast.LENGTH_LONG).show();
+                    }
+                });
+
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //dont do anything
+                    }
+                });
+
+                AlertDialog ad = builder.create();
+
+                AlertDialog mDialog = builder.create();
+                mDialog.show();
+            }
         });
+
+        myRecordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setMessage("Do you really want to record route?").setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        recordRoute();
+
+                    }
+                }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //dont do anything here i guess
+                    }
+                });
+                AlertDialog mDialog = builder.create();
+                mDialog.show();
+            }
+        });
+
 
         return view;
     }
@@ -193,18 +253,56 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    private class PostTask extends AsyncTask<String, Void, Void> {
+
+        HttpURLConnection urlConnection = null;
+        BufferedReader reader = null;
+        String resultJson = "";
+        String data;
+
+        @Override
+        protected Void doInBackground(String... params) {
+            try {
+                data = params[0];
+                Log.d("tag", "doInBackground: " + data);
+                String site_url_json = server_url + data;
+                Log.d("tag", "doInBackground: " + site_url_json);
+                URL url = new URL(site_url_json);
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("POST");
+                urlConnection.connect();
+
+                InputStream inputStream = urlConnection.getInputStream();
+                StringBuffer buffer = new StringBuffer();
+
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line);
+                }
+
+                resultJson = buffer.toString();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
     private void callRobot(){
         new ParseTask().execute("/run/?action=start");
     }
     private void shutdown(){
         new ParseTask().execute("/run/?action=stop");
     }
-
     private void sendRobot(){
         new ParseTask().execute("/run/?action=send");
     }
     private void uploadRoute(){
-        new ParseTask().execute("/upload/?upload=test");
+        new PostTask().execute("/upload/?upload=test");
     }
-    //private void recordRoute(){new ParseTask().execute("/run/?action=send");    }
+    private void recordRoute(){new ParseTask().execute("/run/?action=record");    }
 }
